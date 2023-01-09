@@ -1,0 +1,84 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "GameFramework/Pawn.h"
+#include "Hunter.generated.h"
+
+// Forward Declarations
+class UStaticMeshComponent;
+class USpringArmComponent;	
+class UCameraComponent;
+class USphereComponent;
+
+UCLASS()
+class MARBLES_API AHunter : public APawn
+{
+	GENERATED_BODY()
+
+public:
+	// Sets default values for this pawn's properties
+	AHunter();
+
+protected:
+	// Called when the game starts or when spawned
+	virtual void BeginPlay() override;
+
+public:	
+	// Called every frame
+	virtual void Tick(float DeltaTime) override;
+
+	// Called to bind functionality to input
+	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+private:
+	UPROPERTY(Category = "Mesh", VisibleDefaultsOnly)
+	UStaticMeshComponent* HunterMesh{nullptr};
+	
+	UPROPERTY(VisibleAnywhere, Category = "Components")
+	USphereComponent* const SphereComponent{nullptr};
+	
+	UPROPERTY(VisibleAnywhere, Category = "Components")
+	USpringArmComponent* const SpringArmComponent{nullptr};
+	
+	UPROPERTY(VisibleAnywhere, Category = "Components")
+	UCameraComponent* const CameraComponent{nullptr};
+
+	/** Offset from the ships location to spawn projectiles */
+	UPROPERTY(Category = Gameplay, EditAnywhere)
+	FVector GunOffset;
+	
+	/* How fast the weapon will fire */
+	UPROPERTY(Category = Gameplay, EditAnywhere)
+	float FireRate;
+
+	/* The speed our ship moves around the level */
+	UPROPERTY(Category = Gameplay, EditAnywhere)
+	float MoveSpeed;
+
+	/* Flag to control firing  */
+	uint32 bCanFire : 1;
+
+	/** Handle for efficient management of ShotTimerExpired timer */
+	FTimerHandle TimerHandle_ShotTimerExpired;
+
+public:
+	// Static names for axis bindings
+	static const FName MoveRightBinding;
+
+private:
+	UFUNCTION(BlueprintCallable, Category = "Targeting")
+	void LockOnMouse();
+	UFUNCTION(BlueprintCallable, Category = "Targeting")
+	void LockOnTouch();
+
+	UFUNCTION(BlueprintCallable, Category = "Targeting")
+	/* Fire a shot in the specified direction */
+	void FireShot(FVector FireDirection);
+
+	UFUNCTION(BlueprintCallable, Category = "Targeting")
+	/* Handler for the fire timer expiry */
+	void ShotTimerExpired();
+
+};
