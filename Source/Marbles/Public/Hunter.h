@@ -44,10 +44,29 @@ private:
 	
 	UPROPERTY(VisibleAnywhere, Category = "Components")
 	UCameraComponent* const CameraComponent{nullptr};
+	
+	UPROPERTY()
+	APlayerController* PlayerControllerRef;
+
+	UPROPERTY()
+	FHitResult HitResultOnMouse;
+	UPROPERTY()
+	FHitResult HitResultOnTouch;
+	UPROPERTY()
+	bool bCalculateProjectilePath;
+	UPROPERTY(EditAnywhere, Category="Gameplay")
+	float SpeedMultiplier;
+	UPROPERTY()
+	FVector TouchLocationOnTick;
+	UPROPERTY()
+	FVector LastTouchLocation;
 
 	/** Offset from the ships location to spawn projectiles */
 	UPROPERTY(Category = Gameplay, EditAnywhere)
 	FVector GunOffset;
+
+	UPROPERTY(Category = Gameplay, EditAnywhere)
+	float HunterMeshRelativeLocation_X;
 	
 	/* How fast the weapon will fire */
 	UPROPERTY(Category = Gameplay, EditAnywhere)
@@ -68,17 +87,20 @@ public:
 	static const FName MoveRightBinding;
 
 private:
+	/** Called for side to side input */
+	void MoveRight(float Value);
+	
 	UFUNCTION(BlueprintCallable, Category = "Targeting")
-	void LockOnMouse();
+	void LockOnTouch(ETouchIndex::Type FingerIndex, FVector Location);
+
 	UFUNCTION(BlueprintCallable, Category = "Targeting")
-	void LockOnTouch();
+	void TouchReleased(ETouchIndex::Type FingerIndex, FVector Location);
 
 	UFUNCTION(BlueprintCallable, Category = "Targeting")
 	/* Fire a shot in the specified direction */
 	void FireShot(FVector FireDirection);
-
+	
 	UFUNCTION(BlueprintCallable, Category = "Targeting")
-	/* Handler for the fire timer expiry */
-	void ShotTimerExpired();
+	void CalculateProjectilePath();
 
 };
