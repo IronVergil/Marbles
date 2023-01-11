@@ -11,6 +11,7 @@ class UStaticMeshComponent;
 class USpringArmComponent;	
 class UCameraComponent;
 class USphereComponent;
+class AProjectile;
 
 UCLASS()
 class MARBLES_API AHunter : public APawn
@@ -44,6 +45,17 @@ private:
 	
 	UPROPERTY(VisibleAnywhere, Category = "Components")
 	UCameraComponent* const CameraComponent{nullptr};
+
+	UPROPERTY(EditDefaultsOnly, Category = "FX")
+	UParticleSystem* const ExplosionFX{nullptr};
+
+	UPROPERTY(EditAnywhere, Category = "Projectiles")
+	TSubclassOf<AProjectile> ProjectileClass;
+	
+	// UPROPERTY(VisibleAnywhere, Category = "Components")
+	// USplineComponent* const SplinePath{nullptr};
+	// UPROPERTY(VisibleAnywhere, Category = "Components")
+	// UNiagaraComponent* const PathVisualEffect{nullptr};
 	
 	UPROPERTY()
 	APlayerController* PlayerControllerRef;
@@ -53,6 +65,8 @@ private:
 	UPROPERTY()
 	FHitResult HitResultOnTouch;
 	UPROPERTY()
+	FHitResult TouchLocationRotate;
+	UPROPERTY()
 	bool bCalculateProjectilePath;
 	UPROPERTY(EditAnywhere, Category="Gameplay")
 	float SpeedMultiplier;
@@ -60,6 +74,10 @@ private:
 	FVector TouchLocationOnTick;
 	UPROPERTY()
 	FVector LastTouchLocation;
+	UPROPERTY()
+	float RotationSpeed;
+	UPROPERTY()
+	FVector LauchVelocity;
 
 	/** Offset from the ships location to spawn projectiles */
 	UPROPERTY(Category = Gameplay, EditAnywhere)
@@ -97,8 +115,11 @@ private:
 	void TouchReleased(ETouchIndex::Type FingerIndex, FVector Location);
 
 	UFUNCTION(BlueprintCallable, Category = "Targeting")
+	void AimAt(ETouchIndex::Type FingerIndex, FVector Location);
+
+	UFUNCTION(BlueprintCallable, Category = "Targeting")
 	/* Fire a shot in the specified direction */
-	void FireShot(FVector FireDirection);
+	void FireShot();
 	
 	UFUNCTION(BlueprintCallable, Category = "Targeting")
 	void CalculateProjectilePath();
