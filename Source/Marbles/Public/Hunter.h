@@ -6,8 +6,10 @@
 #include "GameFramework/Pawn.h"
 #include "Hunter.generated.h"
 
+
 // Forward Declarations
-class UStaticMeshComponent;
+class AMarbleStaticMesh;
+class ASliderStaticMesh;
 class USpringArmComponent;	
 class UCameraComponent;
 class USphereComponent;
@@ -34,8 +36,6 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 private:
-	UPROPERTY(Category = "Mesh", VisibleDefaultsOnly)
-	UStaticMeshComponent* HunterMesh{nullptr};
 	
 	UPROPERTY(VisibleAnywhere, Category = "Components")
 	USphereComponent* const SphereComponent{nullptr};
@@ -51,6 +51,17 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "Projectiles")
 	TSubclassOf<AProjectile> ProjectileClass;
+	
+	UPROPERTY(EditAnywhere, Category = "Projectiles")
+	TSubclassOf<AMarbleStaticMesh> HunterMeshActor;
+	UPROPERTY(EditAnywhere, Category = "Projectiles")
+	TSubclassOf<ASliderStaticMesh> SliderMeshActor;
+
+	UPROPERTY()
+	AMarbleStaticMesh* SpawnedHunterMesh;
+	UPROPERTY() 
+	ASliderStaticMesh* SpawnedSliderMesh;
+	
 	
 	// UPROPERTY(VisibleAnywhere, Category = "Components")
 	// USplineComponent* const SplinePath{nullptr};
@@ -78,13 +89,17 @@ private:
 	float RotationSpeed;
 	UPROPERTY()
 	FVector LauchVelocity;
-
+	UPROPERTY()
+	bool bIsTouching;
+	
 	/** Offset from the ships location to spawn projectiles */
 	UPROPERTY(Category = Gameplay, EditAnywhere)
 	FVector GunOffset;
 
 	UPROPERTY(Category = Gameplay, EditAnywhere)
 	float HunterMeshRelativeLocation_X;
+	UPROPERTY(Category = Gameplay, EditAnywhere)
+	float SliderMeshRelativeLocation_X;
 	
 	/* How fast the weapon will fire */
 	UPROPERTY(Category = Gameplay, EditAnywhere)
@@ -95,7 +110,7 @@ private:
 	float MoveSpeed;
 
 	/* Flag to control firing  */
-	uint32 bCanFire : 1;
+	bool bCanFire;
 
 	/** Handle for efficient management of ShotTimerExpired timer */
 	FTimerHandle TimerHandle_ShotTimerExpired;
@@ -109,7 +124,7 @@ private:
 	void MoveRight(float Value);
 	
 	UFUNCTION(BlueprintCallable, Category = "Targeting")
-	void LockOnTouch(ETouchIndex::Type FingerIndex, FVector Location);
+	void TouchPressed(ETouchIndex::Type FingerIndex, FVector Location);
 
 	UFUNCTION(BlueprintCallable, Category = "Targeting")
 	void TouchReleased(ETouchIndex::Type FingerIndex, FVector Location);
@@ -123,5 +138,7 @@ private:
 	
 	UFUNCTION(BlueprintCallable, Category = "Targeting")
 	void CalculateProjectilePath();
+	UFUNCTION(BlueprintCallable, Category = "Targeting")
+	void UpdateHunterLocation();
 
 };
