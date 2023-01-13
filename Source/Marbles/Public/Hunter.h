@@ -8,7 +8,7 @@
 
 
 // Forward Declarations
-class AMarbleStaticMesh;
+class AHunterStaticMesh;
 class ASliderStaticMesh;
 class USpringArmComponent;	
 class UCameraComponent;
@@ -53,12 +53,12 @@ private:
 	TSubclassOf<AProjectile> ProjectileClass;
 	
 	UPROPERTY(EditAnywhere, Category = "Projectiles")
-	TSubclassOf<AMarbleStaticMesh> HunterMeshActor;
+	TSubclassOf<AHunterStaticMesh> HunterMeshActor;
 	UPROPERTY(EditAnywhere, Category = "Projectiles")
 	TSubclassOf<ASliderStaticMesh> SliderMeshActor;
 
 	UPROPERTY()
-	AMarbleStaticMesh* SpawnedHunterMesh;
+	AHunterStaticMesh* SpawnedHunterMesh;
 	UPROPERTY() 
 	ASliderStaticMesh* SpawnedSliderMesh;
 	
@@ -90,7 +90,9 @@ private:
 	UPROPERTY()
 	FVector LauchVelocity;
 	UPROPERTY()
-	bool bIsTouching;
+	bool bIsTouchingHunter;
+	UPROPERTY()
+	bool bIsTouchingSlider;
 	
 	/** Offset from the ships location to spawn projectiles */
 	UPROPERTY(Category = Gameplay, EditAnywhere)
@@ -99,7 +101,12 @@ private:
 	UPROPERTY(Category = Gameplay, EditAnywhere)
 	float HunterMeshRelativeLocation_X;
 	UPROPERTY(Category = Gameplay, EditAnywhere)
+	float HunterMeshRelativeLocation_Y;
+	
+	UPROPERTY(Category = Gameplay, EditAnywhere)
 	float SliderMeshRelativeLocation_X;
+	UPROPERTY(Category = Gameplay, EditAnywhere)
+	float SliderMeshRelativeLocation_Y;
 	
 	/* How fast the weapon will fire */
 	UPROPERTY(Category = Gameplay, EditAnywhere)
@@ -138,7 +145,7 @@ private:
 	
 	UFUNCTION(BlueprintCallable, Category = "Targeting")
 	void CalculateProjectilePath();
-	UFUNCTION(BlueprintCallable, Category = "Targeting")
+	UFUNCTION(BlueprintCallable, Category = "Targeting")	
 	void UpdateHunterLocation();
 
 };

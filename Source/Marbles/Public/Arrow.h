@@ -27,4 +27,8 @@ private:
 	UPROPERTY(Category = "Mesh", VisibleDefaultsOnly)
 	UStaticMeshComponent* ArrowMesh{nullptr};
 
+public:
+	/** Returns ProjectileMesh subobject **/
+	FORCEINLINE UStaticMeshComponent* GetArrowMesh() const { return ArrowMesh; }
+
 };

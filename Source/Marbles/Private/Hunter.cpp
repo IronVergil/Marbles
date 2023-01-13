@@ -4,7 +4,7 @@
 #include "Hunter.h"
 
 #include "DrawDebugHelpers.h"
-#include "MarbleStaticMesh.h"
+#include "HunterStaticMesh.h"
 #include "SliderStaticMesh.h"
 #include "Components/SphereComponent.h"
 #include "GameFramework/SpringArmComponent.h"
@@ -23,7 +23,9 @@ AHunter::AHunter()
 
 	RootComponent = SphereComponent;
 	HunterMeshRelativeLocation_X = -41.0f;
+	HunterMeshRelativeLocation_Y = 41.0f;
 	SliderMeshRelativeLocation_X = -51.0f;
+	SliderMeshRelativeLocation_Y = 51.0f;
 	
 	SpringArmComponent->SetupAttachment(SphereComponent);
 	SpringArmComponent->TargetArmLength = 250.f;
@@ -48,7 +50,8 @@ AHunter::AHunter()
 	GunOffset = FVector(90.f, 0.f, 0.f);
 	FireRate = 0.1f;
 	bCanFire = true;
-	bIsTouching = false;
+	bIsTouchingHunter = false;
+	bIsTouchingSlider = false;
 
 	bCalculateProjectilePath = false;
 	SpeedMultiplier = 4.0f;
@@ -64,11 +67,14 @@ void AHunter::BeginPlay()
 {
 	Super::BeginPlay();
 	PlayerControllerRef = this->GetNetOwningPlayer()->GetPlayerController(this->GetWorld());
-	PlayerControllerRef->SetShowMouseCursor(true);
-	const FVector HunterSpawnLocation = FVector(this->GetActorLocation().X + HunterMeshRelativeLocation_X, 0.0f, this->GetActorLocation().Z);
-	const FVector SliderSpawnLocation = FVector(this->GetActorLocation().X + SliderMeshRelativeLocation_X, 0.0f, this->GetActorLocation().Z);
-	SpawnedHunterMesh = this->GetWorld()->SpawnActor<AMarbleStaticMesh>(HunterSpawnLocation, FRotator(0.0f));
-	SpawnedSliderMesh = this->GetWorld()->SpawnActor<ASliderStaticMesh>(SliderSpawnLocation, FRotator(0.0f));
+	if (PlayerControllerRef)
+	{
+		PlayerControllerRef->SetShowMouseCursor(true);
+		const FVector HunterSpawnLocation = FVector(this->GetActorLocation().X + HunterMeshRelativeLocation_X, 0.0f, this->GetActorLocation().Z);
+		const FVector SliderSpawnLocation = FVector(this->GetActorLocation().X + SliderMeshRelativeLocation_X, 0.0f, this->GetActorLocation().Z);
+		SpawnedHunterMesh = this->GetWorld()->SpawnActor<AHunterStaticMesh>(HunterSpawnLocation, FRotator(0.0f));
+		SpawnedSliderMesh = this->GetWorld()->SpawnActor<ASliderStaticMesh>(SliderSpawnLocation, FRotator(0.0f));
+	}
 }
 
 // Called every frame
@@ -94,21 +100,22 @@ void AHunter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 void AHunter::TouchPressed(ETouchIndex::Type FingerIndex, FVector Location)
 {
 
-	bCalculateProjectilePath = true;
-
 	PlayerControllerRef->GetHitResultUnderFinger(ETouchIndex::Touch1, ECC_Visibility,false, HitResultOnTouch);
 	
 	if ((HitResultOnTouch.GetActor()) == SpawnedSliderMesh )
 	{
-		bIsTouching = true;
+		bIsTouchingSlider = true;
+		bCanFire = false;
 		UE_LOG(LogTemp, Warning, TEXT("The Actor's name is %s"), *HitResultOnTouch.GetActor()->GetName());
-		UE_LOG(LogTemp, Warning, TEXT("Touching"));
+		UE_LOG(LogTemp, Warning, TEXT("Touching Slider"));
 	}
 	if ((HitResultOnTouch.GetActor()) == SpawnedHunterMesh )
 	{
+		bIsTouchingHunter = true;
 		bCanFire = true;
+		bCalculateProjectilePath = true;
 		UE_LOG(LogTemp, Warning, TEXT("The Actor's name is %s"), *HitResultOnTouch.GetActor()->GetName());
-		UE_LOG(LogTemp, Warning, TEXT("Touching"));
+		UE_LOG(LogTemp, Warning, TEXT("Touching Hunter"));
 	}
 }
 
@@ -116,8 +123,8 @@ void AHunter::TouchReleased(ETouchIndex::Type FingerIndex, FVector Location)
 {
 	bCalculateProjectilePath = false;
 	FireShot();
-	bCanFire = false;
-	bIsTouching = false;
+	bIsTouchingHunter = false;
+	bIsTouchingSlider = false;
 }
 
 void AHunter::AimAt(ETouchIndex::Type FingerIndex, FVector Location)
@@ -184,8 +191,11 @@ void AHunter::CalculateProjectilePath()
 
 void AHunter::UpdateHunterLocation()
 {
-	PlayerControllerRef->GetHitResultUnderFinger(ETouchIndex::Touch1, ECC_Visibility,false, HitResultOnTouch);
-	if (HitResultOnTouch.GetActor() == SpawnedSliderMesh)
+	if (PlayerControllerRef)
+	{
+		PlayerControllerRef->GetHitResultUnderFinger(ETouchIndex::Touch1, ECC_Visibility,false, HitResultOnTouch);
+	}
+	if (HitResultOnTouch.GetActor() == SpawnedSliderMesh && !bIsTouchingHunter)
 	{
 		const float NewLocation_Y = HitResultOnTouch.Location.Y;
 		SpawnedSliderMesh->SetActorRelativeLocation(FVector(SliderMeshRelativeLocation_X,NewLocation_Y, this->GetActorLocation().Z));
@@ -198,7 +208,7 @@ void AHunter::FireShot()
 {
 	if (bCanFire == true)
 	{
-		UWorld* const World = this->GetWorld();
+		const UWorld* World = this->GetWorld();
 		if (World != nullptr)
 		{
 			// spawn the projectile
@@ -215,7 +225,7 @@ void AHunter::FireShot()
 			UE_LOG(LogTemp, Warning, TEXT("Spawn Location is: %s"), *SpawnLocation.ToString());
 			UE_LOG(LogTemp, Warning, TEXT("Projectile Location is: %s"), *ProjectileLocation.ToString());
 		}
-
+		bCanFire = false;
 		// bCanFire = false;
 		// World->GetTimerManager().SetTimer(TimerHandle_ShotTimerExpired, this, &AHunter::ShotTimerExpired, FireRate);
 

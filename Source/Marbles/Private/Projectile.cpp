@@ -2,6 +2,9 @@
 
 
 #include "Projectile.h"
+#include "Marble.h"
+
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values
 AProjectile::AProjectile()
@@ -12,7 +15,7 @@ AProjectile::AProjectile()
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> ProjectileMeshAsset(TEXT("/Game/Meshes/Projectile.Projectile"));
 	ProjectileMesh->SetStaticMesh(ProjectileMeshAsset.Object);
 	RootComponent = ProjectileMesh;
-
+	ProjectileMesh->SetNotifyRigidBodyCollision(true);
 	InitialLifeSpan = 3.0f;
 
 }
@@ -21,17 +24,16 @@ AProjectile::AProjectile()
 void AProjectile::BeginPlay()
 {
 	Super::BeginPlay();
-	
+	ProjectileMesh->OnComponentHit.AddDynamic(this, &AProjectile::OnHit);
 }
 
 void AProjectile::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
 	ProjectileMesh->SetSimulatePhysics(true);
-	ProjectileMesh->SetMassOverrideInKg(NAME_None, 0.1);
+	ProjectileMesh->SetMassOverrideInKg(NAME_None, 0.06);
 	ProjectileMesh->SetLinearDamping(0.01);
 	ProjectileMesh->SetAngularDamping(0.5);
-	
 }
 
 // Called every frame
@@ -39,5 +41,17 @@ void AProjectile::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+
 }
 
+void AProjectile::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
+{
+	const AMarble* Marble = Cast<AMarble>(OtherActor);
+
+	if (Marble)
+	{
+		UStaticMeshComponent* Mesh = Marble->GetMarbleMesh();
+		Mesh->AddImpulseAtLocation(this->GetActorForwardVector() * 3.0f, OtherActor->GetActorLocation());
+	}
+}
